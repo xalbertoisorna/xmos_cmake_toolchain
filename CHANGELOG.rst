@@ -1,5 +1,5 @@
-xmos_cmake_toolchain library change log
-=======================================
+xmos_cmake_toolchain change log
+===============================
 
 1.0.0
 -----
