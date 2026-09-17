@@ -6,7 +6,6 @@ pipeline {
     agent {
         label 'linux&&64'
     }
-
     options {
         disableConcurrentBuilds()
         skipDefaultCheckout()
