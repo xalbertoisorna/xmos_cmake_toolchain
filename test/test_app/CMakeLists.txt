@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.21)
 project(toolchain_test)
 
 enable_language(CXX C ASM)
@@ -21,6 +21,5 @@ include (CTest)
 foreach(app c xc cpp s lowers ass)
     target_compile_options(${app} PRIVATE -target=${TARGET})
     target_link_options(${app} PRIVATE -target=${TARGET})
-
     add_test(NAME ${app} COMMAND xsim $<TARGET_FILE:${app}>)
 endforeach()

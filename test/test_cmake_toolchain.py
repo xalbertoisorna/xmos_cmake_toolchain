@@ -29,9 +29,7 @@ def check(proc):
 @pytest.mark.parametrize("toolchain", ["xs3a", "xs2a"])
 def test_cmake_toolchain(toolchain):
     """Build the test_app with both toolchains and run each app, checking it returns 0"""
-    build_dir = (
-        Path(__file__).parent / "build/basic" / os.environ["CMAKE_ENV"] / toolchain
-    )
+    build_dir = Path(__file__).parent / "build/basic" / toolchain
     if build_dir.exists():
         shutil.rmtree(build_dir)
     app_dir = Path(__file__).parent / "test_app"
@@ -67,9 +65,7 @@ def test_cmake_toolchain(toolchain):
 @pytest.mark.parametrize("toolchain", ["xs3a", "xs2a"])
 def test_fails_if_no_xtc_env(toolchain):
     """Build should fail if SetEnv is not run"""
-    build_dir = (
-        Path(__file__).parent / "build/env" / os.environ["CMAKE_ENV"] / toolchain
-    )
+    build_dir = Path(__file__).parent / "build/env" / toolchain
     if build_dir.exists():
         shutil.rmtree(build_dir)
     app_dir = Path(__file__).parent / "test_app"

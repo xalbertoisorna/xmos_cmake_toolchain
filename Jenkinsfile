@@ -1,12 +1,5 @@
 @Library('xmos_jenkins_shared_library@v0.54.0') _
 
-def localRunPytest(String extra_args="") {
-    catchError{
-        sh "python -m pytest --junitxml=pytest_result.xml -rA -v --durations=0 -o junit_logging=all ${extra_args}"
-    }
-    junit "pytest_result.xml"
-}
-
 getApproval()
 
 pipeline {
@@ -51,7 +44,7 @@ pipeline {
         stage ("Create Python environment") {
             steps {
                 dir("${REPO}") {
-                    createVenv(reqFile: 'requirements.txt')
+                    createVenv(reqFile: 'test/requirements.txt')
                 }
             }
         }
@@ -69,7 +62,6 @@ pipeline {
                 dir("${REPO}/test") {
                     withVenv {
                         withTools(params.TOOLS_VERSION) {
-                            sh 'tox run'
                             runPytest()
                         }
                     }
