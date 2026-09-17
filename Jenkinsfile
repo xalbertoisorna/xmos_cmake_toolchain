@@ -20,12 +20,6 @@ pipeline {
             description: 'The XTC tools version'
         )
     }
-    environment {
-        REPO = 'xmos_cmake_toolchain'
-        PYTHON_VERSION = "3.10.5"
-        VENV_DIRNAME = ".venv"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -33,7 +27,6 @@ pipeline {
                 script {
                     def (server, user, repo) = extractFromScmUrl()
                     env.REPO_NAME = repo
-                    env.REPO = repo
                 }
                 dir(REPO_NAME){
                     checkoutScmShallow()
@@ -41,25 +34,19 @@ pipeline {
             }
         }  // stage('Checkout')
 
-        stage ("Create Python environment") {
-            steps {
-                dir("${REPO}") {
-                    createVenv(reqFile: 'test/requirements.txt')
-                }
-            }
-        }
         stage('Library checks') {
             steps {
                 warnError("Repo checks failed")
                 {
-                    runRepoChecks("${WORKSPACE}/${REPO}")
+                    runRepoChecks("${WORKSPACE}/${REPO_NAME}")
                 }
             }
-        }
+        } // stage('Library checks')
 
         stage('Tests') {
             steps {
-                dir("${REPO}/test") {
+                dir("${REPO_NAME}/test") {
+                    createVenv(reqFile: 'requirements.txt')
                     withVenv {
                         withTools(params.TOOLS_VERSION) {
                             runPytest()
@@ -67,7 +54,7 @@ pipeline {
                     }
                 }
             }
-        }
+        } // stage('Tests')
     }
 
     post {
