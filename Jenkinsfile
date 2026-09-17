@@ -1,4 +1,4 @@
-@Library('xmos_jenkins_shared_library@v0.27.0') _
+@Library('xmos_jenkins_shared_library@v0.54.0') _
 
 def localRunPytest(String extra_args="") {
     catchError{
@@ -23,7 +23,7 @@ pipeline {
     parameters {
         string(
             name: 'TOOLS_VERSION',
-            defaultValue: '15.2.1',
+            defaultValue: '15.3.1',
             description: 'The XTC tools version'
         )
     }
@@ -34,61 +34,50 @@ pipeline {
     }
 
     stages {
-        stage('Get repo') {
+        stage('Checkout') {
             steps {
-                sh "mkdir ${REPO}"
-                // source checks require the directory
-                // name to be the same as the repo name
-                dir("${REPO}") {
-                    checkout scm
-                    sh 'git submodule update --init --recursive --depth 1'
+                println "Stage running on ${env.NODE_NAME}"
+                script {
+                    def (server, user, repo) = extractFromScmUrl()
+                    env.REPO_NAME = repo
+                    env.REPO = repo
+                }
+                dir(REPO_NAME){
+                    checkoutScmShallow()
                 }
             }
-        }
+        }  // stage('Checkout')
+
         stage ("Create Python environment") {
             steps {
                 dir("${REPO}") {
-                    createVenv('requirements.txt')
-                    withVenv {
-                        sh 'pip install -r requirements.txt'
-                    }
+                    createVenv(reqFile: 'requirements.txt')
                 }
             }
         }
         stage('Library checks') {
             steps {
-                dir("${REPO}") {
-                    sh 'git clone git@github.com:xmos/infr_apps.git'
-                    sh 'git clone git@github.com:xmos/infr_scripts_py.git'
-                    withVenv {
-                        sh 'pip install -e infr_scripts_py'
-                        sh 'pip install -e infr_apps'
-                        dir("test") {
-                            withEnv(["XMOS_ROOT=.."]) {
-                                localRunPytest('-s test_lib_checks.py -vv')
-                            }
-                        }
-                    }
+                warnError("Repo checks failed")
+                {
+                    runRepoChecks("${WORKSPACE}/${REPO}")
                 }
             }
         }
+
         stage('Tests') {
             steps {
-                dir("${REPO}") {
+                dir("${REPO}/test") {
                     withVenv {
                         withTools(params.TOOLS_VERSION) {
-                            dir("test") {
-                                withEnv(["XMOS_ROOT=.."]) {
-                                    sh 'tox run'
-                                    junit "pytest_result.xml"
-                                }
-                            }
+                            sh 'tox run'
+                            runPytest()
                         }
                     }
                 }
             }
         }
     }
+
     post {
         cleanup {
             xcoreCleanSandbox()
