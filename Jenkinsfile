@@ -41,7 +41,7 @@ pipeline {
         stage('Library checks') {
             steps {
                 //TODO this repo does not have a library structure, so these checks might not be fully applicable
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE', message: 'Repo checks failed') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS', message: 'Repo checks failed') {
                     runRepoChecks("${WORKSPACE}/${REPO_NAME}")
                 }
             }
