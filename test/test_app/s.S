@@ -37,7 +37,7 @@ FUNCTION_NAME:
 .globl FUNCTION_NAME
 .type FUNCTION_NAME,@function
 FUNCTION_NAME:
-    li t0, 0
+    li a0, 0
     ret
 
 .size FUNCTION_NAME, . -FUNCTION_NAME
