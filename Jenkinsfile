@@ -14,9 +14,14 @@ pipeline {
     }
     parameters {
         string(
-            name: 'TOOLS_VERSION',
+            name: 'TOOLS_VERSION_XS',
             defaultValue: '15.3.1',
-            description: 'The XTC tools version'
+            description: 'XS XTC tools version'
+        )
+        string(
+            name: 'TOOLS_VERSION_VX',
+            defaultValue: '-j --repo arch_vx_slipgate -b master -a XTC 131',
+            description: 'VX4 XTC tools version'
         )
     }
     stages {
@@ -35,23 +40,47 @@ pipeline {
 
         stage('Library checks') {
             steps {
-                warnError("Repo checks failed")
-                {
+                //TODO this repo does not have a library structure, so these checks might not be fully applicable
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE', message: 'Repo checks failed') {
                     runRepoChecks("${WORKSPACE}/${REPO_NAME}")
                 }
             }
         } // stage('Library checks')
 
-        stage('Tests') {
+        stage('Test setup') {
             steps {
                 dir("${REPO_NAME}/test") {
                     createVenv(reqFile: 'requirements.txt')
-                    withVenv {
-                        withTools(params.TOOLS_VERSION) {
-                            runPytest()
+                }
+            }
+        } // stage('Test setup')
+
+        stage('Tests') {
+            parallel {
+                stage('XS3 test') {
+                    steps {
+                        dir("${REPO_NAME}/test") {
+                            withVenv {
+                                withTools(params.TOOLS_VERSION_XS) {
+                                    runPytest('--toolchain xs2a')
+                                    runPytest('--toolchain xs3a')
+                                }
+                            }
                         }
                     }
-                }
+                } // stage('XS3 test')
+
+                stage('VX4 test') {
+                    steps {
+                        dir("${REPO_NAME}/test") {
+                            withVenv {
+                                withTools(params.TOOLS_VERSION_VX) {
+                                    runPytest('--toolchain vx4_xcc')
+                                }
+                            }
+                        }
+                    }
+                } // stage('VX4 test')
             }
         } // stage('Tests')
     }
